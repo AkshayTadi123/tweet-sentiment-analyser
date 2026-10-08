@@ -4,8 +4,6 @@ Classifies tweets as positive, negative or neutral using TF-IDF features and log
 
 ## Setup
 
-Requires Python 3.11.
-
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
