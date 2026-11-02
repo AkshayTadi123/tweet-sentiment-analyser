@@ -15,20 +15,22 @@ def load_raw(path=RAW_PATH):
 
 
 def clean(df):
-    """Keep the columns the pipeline uses; drop empty and duplicate tweets."""
     df = df.rename(columns={"airline_sentiment": "label", "tweet_created": "created_at"})
     df = df[["text", "label", "created_at", "airline"]].copy()
     df["text"] = df["text"].str.strip()
     df = df[df["text"].notna() & (df["text"] != "")]
-    # The same text with different labels means annotators disagreed: drop every copy.
+
+    # check if there are tweets which have the same text but differ in sentiment. Drop all such cases
     conflicting = df.groupby("text")["label"].transform("nunique") > 1
+
+    # only choose the rows where ~conflicting = True and then drop any rows with duplicate text
     df = df[~conflicting].drop_duplicates(subset="text")
+    
     df["created_at"] = pd.to_datetime(df["created_at"], format="%Y-%m-%d %H:%M:%S %z")
     return df.reset_index(drop=True)
 
 
 def split(df):
-    """Stratified 70/15/15 train/val/test split."""
     train, rest = train_test_split(df, test_size=0.30, stratify=df["label"], random_state=SEED)
     val, test = train_test_split(rest, test_size=0.50, stratify=rest["label"], random_state=SEED)
     return train, val, test
